@@ -157,7 +157,6 @@ class ShowListStore(Gtk.ListStore):
 
             my_last_update = show['my_last_update']
 
-            row[17] = utils.format_local_time(last_update_date)
             row[18] = show['my_last_update'].timestamp() if show['my_last_update'] is not None else 0
         return
 
