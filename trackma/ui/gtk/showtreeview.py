@@ -16,6 +16,7 @@
 from gi.repository import GObject, Gdk, Gtk, Pango
 
 from trackma import utils
+from datetime import datetime, timedelta
 
 
 class ShowListStore(Gtk.ListStore):
@@ -38,7 +39,9 @@ class ShowListStore(Gtk.ListStore):
         ('my-status', str),
         ('status', int),
         ('last-updated', str),
-        ('last-updated-timestamp', float)
+        ('last-updated-timestamp', float),
+        ('week-day', str),
+        ('next-episode-estimated-at', str)
     )
 
     def __init__(self, decimals=0, colors=dict()):
@@ -107,6 +110,16 @@ class ShowListStore(Gtk.ListStore):
         my_last_update_dt = show.get('my_last_update')
         my_last_update = utils.format_local_time(my_last_update_dt)
         my_last_update_timestamp = my_last_update_dt.timestamp() if my_last_update_dt is not None else 0
+        current_date = datetime.now()
+        if show['start_date']:
+            week_day = show['start_date'].strftime('%a')
+            if show['end_date'] == None or current_date < show['end_date']:
+                next_episode_estimated_at = self.format_date(current_date + timedelta(days=show['start_date'].weekday()))
+            else:
+                next_episode_estimated_at = 'Finished'
+        else:
+            week_day = '-'
+            next_episode_estimated_at = 'Not aired'
 
         row = [show['id'],
                title_str,
@@ -127,6 +140,8 @@ class ShowListStore(Gtk.ListStore):
                show['status'],
                my_last_update,
                my_last_update_timestamp,
+               week_day,
+               next_episode_estimated_at,
                ]
         super().append(row)
 
@@ -240,6 +255,8 @@ class ShowTreeView(Gtk.TreeView):
             ('My start', 13),
             ('My end', 14),
             ('Last updated', 17),
+            ('Week Day', 19),
+            ('Next Ep.', 20),
         )
 
         for (name, sort) in self.available_columns:
@@ -320,6 +337,12 @@ class ShowTreeView(Gtk.TreeView):
         renderer = Gtk.CellRendererText()
         self.cols['Last updated'].pack_start(renderer, False)
         self.cols['Last updated'].add_attribute(renderer, 'text', 17)
+        renderer = Gtk.CellRendererText()
+        self.cols['Week Day'].pack_start(renderer, False)
+        self.cols['Week Day'].add_attribute(renderer, 'text', 19)
+        renderer = Gtk.CellRendererText()
+        self.cols['Next Ep.'].pack_start(renderer, False)
+        self.cols['Next Ep.'].add_attribute(renderer, 'text', 20)
 
     def _header_button_press(self, button, event):
         if event.button == 3:
