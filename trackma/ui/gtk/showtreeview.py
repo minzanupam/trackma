@@ -114,7 +114,10 @@ class ShowListStore(Gtk.ListStore):
         if show['start_date']:
             week_day = show['start_date'].strftime('%a')
             if show['end_date'] == None or current_date < show['end_date']:
-                next_episode_estimated_at = self.format_date(current_date + timedelta(days=show['start_date'].weekday()))
+                day_diff = show['start_date'].weekday() - current_date.weekday()
+                if day_diff < 0:
+                    day_diff += 7
+                next_episode_estimated_at = self.format_date(current_date + timedelta(days=day_diff))
             else:
                 next_episode_estimated_at = 'Finished'
         else:
